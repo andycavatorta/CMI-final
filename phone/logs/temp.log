@@ -1,0 +1,18 @@
+2015-07-29 23:05:44,425 Event: NetSync.syncFiles started
+2015-07-29 23:05:49,708 Event: NetSync.getRemoteFileNames retrieved remote file names from API
+2015-07-29 23:05:49,718 Event: AudioPlayer.getFileNames found 13 local audio files
+2015-07-29 23:05:49,720 Event: AudioPlayer.getFileNames succeeded
+2015-07-29 23:05:58,312 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/00_703-Extremely-Loud-and-Incredibly-Close-by-Jonathan-Safran-Foer-final.ogg
+2015-07-29 23:06:02,442 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/01_699-On-Looking-by-Alexandra-Horowitz-final.ogg
+2015-07-29 23:06:06,911 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/02_071-Pajama-Time-by-Sandra-Boynton-final.ogg
+2015-07-29 23:06:12,565 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/03_323-Anna-Karenina-by-Leo-Tolstoy-final.ogg
+2015-07-29 23:06:16,454 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/04_777-Tiny-Beautiful-Things-by-Cheryl-Strayed-final.ogg
+2015-07-29 23:06:20,949 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/05_451-Harry-Potter-by-J.K.-Rowling-final.ogg
+2015-07-29 23:06:25,100 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/06_800-Lets-Pretend-This-Never-Happened-by-Jenny-Lawson-final.ogg
+2015-07-29 23:06:35,016 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/07_028-The-Sneetches-by-Dr-Seuss-final.ogg
+2015-07-29 23:06:38,284 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/08_592-A-Short-History-of-Nearly-Everything-by-Bill-Bryson-final.ogg
+2015-07-29 23:06:44,529 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/09_888-To-Kill-a-Mockingbird-by-Harper-Lee-final.ogg
+2015-07-29 23:06:47,469 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/10_074-Fault-In-Our-stars-by-John-Green-final.ogg
+2015-07-29 23:06:51,996 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/11_020-Merriam-Webster-Dictionary-final.ogg
+2015-07-29 23:06:52,793 Event: AudioPlayer.loadContentSounds succeeded for /home/pi/CMI/phone/audiofiles/12_whitenoise.ogg
+2015-07-29 23:06:52,795 Event: NetSync.syncFiles complete
