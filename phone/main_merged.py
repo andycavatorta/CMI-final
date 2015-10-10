@@ -1,10 +1,3 @@
-"""
-
-don't preload audio
-new WiFi interface
-
-"""
-
 import base64
 import commands
 import json
@@ -15,13 +8,44 @@ import time
 import threading
 import urllib
 import urllib2
+import ConfigParser
+
+Config = ConfigParser.ConfigParser()
+Config.read("settings.ini")
+
+def ConfigSectionMap(section):
+    dict1 = {}
+    #print Config.options()
+    options = Config.options(section)
+    print "options=", options
+    for option in options:
+        try:
+            dict1[option] = Config.get(section, option)
+            if dict1[option] == -1:
+                DebugPrint("skip: %s" % option)
+        except:
+            print("exception on %s!" % option)
+            dict1[option] = None
+    return dict1
+
+wifi_ssid = ConfigSectionMap("wifi")['ssid']
+wifi_password = ConfigSectionMap("wifi")['password']
+
+print wifi_ssid
+print wifi_password
+
+try:
+    import ip_email
+except Exception as e:
+    print "exception in ip_email.py", e
+
 
 PI_NATIVE = os.uname()[4].startswith("arm") # TRUE if running on RPi
 AUDIO_DIRECTORY = "audiofiles/"
 AUDIO_DIRECTORY_2 = "oggfiles/"
 DTMF_DIRECTORY = "dtmf/"
 LOG_PATH = "logs/temp.log"
-BASE_PATH = "/home/pi/CMI/phone/" if PI_NATIVE else "/home/stella/Dropbox/projects/current/CMI/code/phone/" 
+BASE_PATH = "/media/usb0/CMI-final/phone/" if PI_NATIVE else "/home/stella/Dropbox/projects/current/CMI/code/phone/" 
 BASE_URL = "https://callmeishmael-api.herokuapp.com"
 
 CONFIG = {
