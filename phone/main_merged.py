@@ -249,7 +249,8 @@ class AudioPlayer(threading.Thread):
             #sound = pygame.mixer.Sound(filePath)
             #sound.set_volume(1.0) 
             #sound.play(0)
-            self.contentSounds_l[ordinal].play(0)
+            channel = self.contentSounds_l[ordinal].play(0)
+            channel.set_volume(1.0,0.0) 
             logger.logEvent('Event: AudioPlayer.playContent playing %s' % (filePath))
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.playContent: %s'  % (repr(e)))
@@ -263,13 +264,15 @@ class AudioPlayer(threading.Thread):
 
     def playDTMF(self, ordinal):
         try:
-            self.dtmfSounds_l[ordinal].play(0)
+            channel = self.dtmfSounds_l[ordinal].play(0)
+            channel.set_volume(1.0,0.0) 
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.playDTMF: %s'  % (repr(e)))
 
     def playRingtone(self):
         try:
-            self.ringtoneSound.play(0)
+            channel = self.ringtoneSound.play(0)
+            channel.set_volume(0.0,1.0) 
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.playRingtone: %s'  % (repr(e)))
 
