@@ -28,12 +28,6 @@ def ConfigSectionMap(section):
             dict1[option] = None
     return dict1
 
-wifi_ssid = ConfigSectionMap("wifi")['ssid']
-wifi_password = ConfigSectionMap("wifi")['password']
-
-print wifi_ssid
-print wifi_password
-
 try:
     import ip_email
 except Exception as e:
@@ -42,17 +36,15 @@ except Exception as e:
 
 PI_NATIVE = os.uname()[4].startswith("arm") # TRUE if running on RPi
 AUDIO_DIRECTORY = "audiofiles/"
-AUDIO_DIRECTORY_2 = "oggfiles/"
 DTMF_DIRECTORY = "dtmf/"
+RINGTONE_PATH = "ringtone/ringtone.ogg"
 LOG_PATH = "logs/temp.log"
 BASE_PATH = "/media/usb0/CMI-final/phone/" if PI_NATIVE else "/home/stella/Dropbox/projects/current/CMI/code/phone/" 
 BASE_URL = "https://callmeishmael-api.herokuapp.com"
 
 CONFIG = {
-    "venueID" : "1",
-    "phoneID" : "1",
-    "wifiSSID" : "****",
-    "wifiPW" : "*****",
+    "venueID" : ConfigSectionMap("ID")['venue'],
+    "phoneID" : ConfigSectionMap("ID")['phone'],
 }
 
 if PI_NATIVE:
@@ -96,12 +88,14 @@ class HWListener(threading.Thread):
             self.bellButtonPin = GPIO.input(26)
             if self.bellButtonPin and self.bellButtonState  == False:
                 self.bellButtonState = True
-                GPIO.output(23,1)
+                audioplayer.playRingtone()
+                #GPIO.output(23,1)
                 logger.logEvent('Event: HWListener.checkBell detects button pushed ' )
 
-            if self.bellButtonPin == False:
+            if self.bellButtonPin == False and self.bellButtonState == True:
                 self.bellButtonState = False
-                GPIO.output(23,0)
+                audioplayer.stopRingtone()
+                #GPIO.output(23,0)
 
         except Exception as e:
             logger.logEvent('Exception: HWListener.checkBell: %s'  % (repr(e)))
@@ -172,6 +166,7 @@ class AudioPlayer(threading.Thread):
         self.audioFileNames_l = []
         self.contentSounds_l = []
         self.dtmfSounds_l = []
+        self.ringtoneSound = None
         self.getFileNames()
         self.loadContentSounds()
         self.sound = None
@@ -213,6 +208,25 @@ class AudioPlayer(threading.Thread):
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.getFileNames: %s'  % (repr(e)))
 
+    def loadDTMFSounds(self):
+        try:
+            for i in range(12):
+                filePath = "%s%s%s.%s" % (BASE_PATH,DTMF_DIRECTORY, str(i), "aiff")
+                sound = pygame.mixer.Sound(filePath)
+                sound.set_volume(1.0, 0.0) 
+                self.dtmfSounds_l.append(sound)
+                logger.logEvent('Event: AudioPlayer.loadDTMFSounds succeeded for %s' % (filePath))
+        except Exception as e:
+            logger.logEvent('Exception: AudioPlayer.loadDTMFSounds: %s'  % (repr(e)))
+
+    def loadRingtoneSound(self):
+        try:
+            self.ringtoneSound = pygame.mixer.Sound(RINGTONE_PATH)
+            self.ringtoneSound = sound.set_volume(0.0, 1.0) 
+            logger.logEvent('Event: AudioPlayer.loadRingtoneSound succeeded for %s' % (RINGTONE_PATH))
+        except Exception as e:
+            logger.logEvent('Exception: AudioPlayer.loadRingtoneSound: %s'  % (repr(e)))
+
     def loadContentSounds(self):
         try:
             for afn in self.audioFileNames_l:
@@ -221,7 +235,7 @@ class AudioPlayer(threading.Thread):
                 else:
                     filePath = "%s%s%s" % (BASE_PATH, AUDIO_DIRECTORY, afn)
                     sound = pygame.mixer.Sound(filePath)
-                    sound.set_volume(1.0) 
+                    sound.set_volume(1.0, 0.0) 
                     self.contentSounds_l.append(sound)
                     logger.logEvent('Event: AudioPlayer.loadContentSounds succeeded for %s' % (filePath))
         except Exception as e:
@@ -245,20 +259,17 @@ class AudioPlayer(threading.Thread):
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.stopContent: %s'  % (repr(e)))
 
-    def loadDTMFSounds(self):
-        try:
-            for i in range(12):
-                filePath = "%s%s%s.%s" % (BASE_PATH,DTMF_DIRECTORY, str(i), "aiff")
-                self.dtmfSounds_l.append(pygame.mixer.Sound(filePath))
-                logger.logEvent('Event: AudioPlayer.loadDTMFSounds succeeded for %s' % (filePath))
-        except Exception as e:
-            logger.logEvent('Exception: AudioPlayer.loadDTMFSounds: %s'  % (repr(e)))
-
     def playDTMF(self, ordinal):
         try:
             self.dtmfSounds_l[ordinal].play(0)
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.playDTMF: %s'  % (repr(e)))
+
+    def playRingtone(self):
+        try:
+            self.ringtoneSound.play(0)
+        except Exception as e:
+            logger.logEvent('Exception: AudioPlayer.playRingtone: %s'  % (repr(e)))
 
     def playSequence(self, ordinal):
         pygame.mixer.stop()
@@ -270,20 +281,7 @@ class AudioPlayer(threading.Thread):
         time.sleep(1)
         if 1 <= ordinal <=9:
             self.postRollFlag = True
-    
-    def playAudioFile(self, filename):
-        try:
-            if filename:
-                logger.logEvent('Event: AudioPlayer.playAudioFile %s' % filename)
-                self.stopAudioFile()
-                filePath = self.rootDirectory_str + filename
-                self.lock.set()
-                self.sound = pygame.mixer.Sound(filePath)
-                self.sound.play(0)
-                self.lock.clear()
-        except Exception as e:
-            logger.logEvent('Exception: AudioPlayer.playAudioFile: %s'  % (repr(e)))
-    
+
     def stopAudioFile(self):
         try:
             pygame.mixer.stop()
@@ -291,6 +289,12 @@ class AudioPlayer(threading.Thread):
             logger.logEvent('Event: AudioPlayer.stopAudioFile succeeded')
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.stopAudioFile: %s'  % (repr(e)))
+
+    def stopRingtone(self):
+        try:
+            self.ringtoneSound.stop()
+        except Exception as e:
+            logger.logEvent('Exception: AudioPlayer.stopRingtone: %s'  % (repr(e)))
 
 NetSync_lock = threading.Event()
 
@@ -479,5 +483,3 @@ def main():
     netSync.start()
     
 main()
-#time.sleep(3)
-#audioPlayer.playSequence(5)
