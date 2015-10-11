@@ -1,5 +1,6 @@
 import base64
 import commands
+import hashlib
 import json
 import logging
 import os
@@ -7,32 +8,12 @@ import pygame
 import time
 import threading
 import urllib
-import urllib2
-import ConfigParser
-
-Config = ConfigParser.ConfigParser()
-Config.read("settings.ini")
-
-def ConfigSectionMap(section):
-    dict1 = {}
-    #print Config.options()
-    options = Config.options(section)
-    print "options=", options
-    for option in options:
-        try:
-            dict1[option] = Config.get(section, option)
-            if dict1[option] == -1:
-                DebugPrint("skip: %s" % option)
-        except:
-            print("exception on %s!" % option)
-            dict1[option] = None
-    return dict1
+import urllib2 
 
 try:
     import ip_email
 except Exception as e:
     print "exception in ip_email.py", e
-
 
 PI_NATIVE = os.uname()[4].startswith("arm") # TRUE if running on RPi
 AUDIO_DIRECTORY = "audiofiles/"
@@ -45,8 +26,6 @@ BASE_URL = "https://callmeishmael-api.herokuapp.com"
 CONFIG = {
     "venueID" : 1,
     "phoneID" : 1,
-    #"venueID" : ConfigSectionMap("ID")['venue'],
-    #"phoneID" : ConfigSectionMap("ID")['phone'],
 }
 
 if PI_NATIVE:
@@ -385,12 +364,71 @@ class NetSync(threading.Thread):
             logger.logEvent("Event: NetSync.deleteLocalFile deleted local file %s" % localFilePath)
         except Exception as e:
             logger.logEvent('Exception: NetSync.deleteLocalFile: %s'  % (repr(e)))
+    def md5(self,fname):
+        hash = hashlib.md5()
+        with open(fname, "rb") as f:
+            for chunk in iter(lambda: f.read(4096), b""):
+                hash.update(chunk)
+        return hash.hexdigest()
     def syncFiles(self):
         try:
+            # retrieve list of names of remote files from server
+
+            # identify changed file names
+
+            # download changed files to temp directory
+
+            # download MD5 checksums for changed files
+
+            # verify downloads
+                # check file sizes
+                # check MD5 sums
+                # if bad, retry file + MD5 download 3 times
+                # if good, 
+
+            # copy file to new location
+
             logger.logEvent('Event: NetSync.syncFiles started')
-            remotePaths_json = self.getRemoteFileNames()
-            
+            remotePaths_json = self.getRemoteFileNames()# fetch json list of remote file names from server
             if remotePaths_json: # if remote file names list received from server
+                # parse json and count remote and local files
+                remotePaths_l =  json.loads(remotePaths_json) # 
+                remoteFileNames_l = [  path_str.rsplit("/")[-1] for  path_str in remotePaths_l  ]
+                remoteFileCount = len(remoteFileNames_l)
+                localFileNames_l = self.getLocalFileNames()
+                localFileCount = len(localFileNames_l)
+                # identify and remove obsolete local files
+                for lfi in range(len(localFileNames_l)):
+                    found = False
+                    for rfi in range(remoteFileCount):
+                        remoteFileName_str = remoteFileNames_l[rfi] # just to make this more readable
+                        remoteFileNamePlusOrdinal_str = "%s_%s" % (str(rfi).zfill(2),remoteFileName_str)
+                        if remoteFileNamePlusOrdinal_str == localFileNames_l[lfi]:
+                            found = True
+                            break
+                    if not found:
+                        if localFileNames_l[lfi] != "":
+                            fullLocalPath = "%s%s%s" % (BASE_PATH, AUDIO_DIRECTORY, localFileNames_l[lfi])
+                            self. deleteLocalFile(fullLocalPath) 
+                # identify, download, and rename remote files not found locally
+                localFileNames_l = self.getLocalFileNames() #update local filenames,
+                for rfi in range(remoteFileCount):
+                    remoteFileName_str = remoteFileNames_l[rfi] # just to make this more readable
+                    remoteFileNamePlusOrdinal_str = "%s_%s" % (str(rfi).zfill(2),remoteFileName_str)
+                    if remoteFileNamePlusOrdinal_str not in localFileNames_l: 
+                        success = self.downloadRemoteFile(remotePaths_l[rfi], "%s%s%s" % (BASE_PATH,AUDIO_DIRECTORY , remoteFileNamePlusOrdinal_str ))
+            #localFileNames_l = self.getLocalFileNames()
+            audioPlayer.getFileNames()
+            audioPlayer.loadContentSounds()
+            logger.logEvent('Event: NetSync.syncFiles complete')
+
+
+
+
+            logger.logEvent('Event: NetSync.syncFiles started')
+            remotePaths_json = self.getRemoteFileNames()# fetch json list of remote file names from server
+            if remotePaths_json: # if remote file names list received from server
+                # parse json and count remote and local files
                 remotePaths_l =  json.loads(remotePaths_json) # 
                 remoteFileNames_l = [  path_str.rsplit("/")[-1] for  path_str in remotePaths_l  ]
                 remoteFileCount = len(remoteFileNames_l)
