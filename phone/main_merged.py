@@ -43,8 +43,10 @@ BASE_PATH = "/media/usb0/CMI-final/phone/" if PI_NATIVE else "/home/stella/Dropb
 BASE_URL = "https://callmeishmael-api.herokuapp.com"
 
 CONFIG = {
-    "venueID" : ConfigSectionMap("ID")['venue'],
-    "phoneID" : ConfigSectionMap("ID")['phone'],
+    "venueID" : 1,
+    "phoneID" : 1,
+    #"venueID" : ConfigSectionMap("ID")['venue'],
+    #"phoneID" : ConfigSectionMap("ID")['phone'],
 }
 
 if PI_NATIVE:
