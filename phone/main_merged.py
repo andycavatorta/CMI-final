@@ -213,7 +213,7 @@ class AudioPlayer(threading.Thread):
             for i in range(12):
                 filePath = "%s%s%s.%s" % (BASE_PATH,DTMF_DIRECTORY, str(i), "aiff")
                 sound = pygame.mixer.Sound(filePath)
-                sound.set_volume(1.0, 0.0) 
+                sound.set_volume(1.0) 
                 self.dtmfSounds_l.append(sound)
                 logger.logEvent('Event: AudioPlayer.loadDTMFSounds succeeded for %s' % (filePath))
         except Exception as e:
@@ -222,7 +222,7 @@ class AudioPlayer(threading.Thread):
     def loadRingtoneSound(self):
         try:
             self.ringtoneSound = pygame.mixer.Sound(RINGTONE_PATH)
-            self.ringtoneSound = sound.set_volume(0.0, 1.0) 
+            self.ringtoneSound = sound.set_volume(1.0) 
             logger.logEvent('Event: AudioPlayer.loadRingtoneSound succeeded for %s' % (RINGTONE_PATH))
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.loadRingtoneSound: %s'  % (repr(e)))
@@ -235,7 +235,7 @@ class AudioPlayer(threading.Thread):
                 else:
                     filePath = "%s%s%s" % (BASE_PATH, AUDIO_DIRECTORY, afn)
                     sound = pygame.mixer.Sound(filePath)
-                    sound.set_volume(1.0, 0.0) 
+                    sound.set_volume(1.0) 
                     self.contentSounds_l.append(sound)
                     logger.logEvent('Event: AudioPlayer.loadContentSounds succeeded for %s' % (filePath))
         except Exception as e:
