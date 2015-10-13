@@ -11,7 +11,7 @@ import urllib2
 # Change to your own account information
 to = 'andycavatorta@gmail.com,aokunseinde@gmail.com'
 gmail_user = 'simurghnodes@gmail.com'
-gmail_password = '51mur6n0de5'
+gmail_password = ''
 smtpserver = smtplib.SMTP('smtp.gmail.com', 587)
 smtpserver.ehlo()
 smtpserver.starttls()
