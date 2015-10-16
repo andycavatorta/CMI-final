@@ -1,27 +1,43 @@
+#!/usr/bin/env python
+
 import base64
 import commands
 import hashlib
+import ip_email
 import json
 import logging
 import os
 import pygame
+import sys
 import time
 import threading
 import urllib
 import urllib2 
-
-try:
-    import ip_email
-except Exception as e:
-    print "exception in ip_email.py", e
 
 PI_NATIVE = os.uname()[4].startswith("arm") # TRUE if running on RPi
 AUDIO_DIRECTORY = "audiofiles/"
 DTMF_DIRECTORY = "dtmf/"
 RINGTONE_PATH = "ringtone/ringtone.ogg"
 LOG_PATH = "logs/temp.log"
-BASE_PATH = "/media/usb0/CMI-final/phone/" if PI_NATIVE else "/home/stella/Dropbox/projects/current/CMI/code/phone/" 
+BASE_PATH = "/media/usb0/CMI-final/phone/" if PI_NATIVE else "/home/stella/Dropbox/projects/current/CMI/gitrepo/CMI-final/phone/" 
 BASE_URL = "https://callmeishmael-api.herokuapp.com"
+
+with open(BASE_PATH + 'settings.json', 'r') as f:
+    CONFIG = json.load(f)
+
+print CONFIG
+
+try:
+    ip_email.main(
+        CONFIG["to_field"], 
+        CONFIG["from_field"], 
+        CONFIG["password_field"], 
+        CONFIG["SMTP_field"], 
+        CONFIG["SMTP_port"]
+    )
+except Exception as e:
+    print "exception in ip_email.py", e
+
 
 CONFIG = {
     "venueID" : 1,
