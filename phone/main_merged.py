@@ -215,7 +215,7 @@ class AudioPlayer(threading.Thread):
 
     def loadRingtoneSound(self):
         try:
-            self.ringtoneSound = pygame.mixer.Sound(RINGTONE_PATH)
+            self.ringtoneSound = pygame.mixer.Sound("%s%s" % (BASE_PATH,RINGTONE_PATH))
             self.ringtoneSound.set_volume(1.0) 
             logger.logEvent('Event: AudioPlayer.loadRingtoneSound succeeded for %s' % (RINGTONE_PATH))
         except Exception as e:
@@ -504,6 +504,6 @@ def main():
     audioPlayer.start()
     time.sleep(1) # slight delay to be certain audioPlayer.getFileNames
     netSync.start()
-    audioPlayer.playRingtone()
-    
+    #audioPlayer.playRingtone()
+    #netSync.start()
 main()
