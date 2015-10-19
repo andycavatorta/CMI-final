@@ -81,7 +81,7 @@ class HWListener(threading.Thread):
             self.bellButtonPin = GPIO.input(26)
             if self.bellButtonPin and self.bellButtonState  == False:
                 self.bellButtonState = True
-                audioplayer.playRingtone()
+                audioPlayer.playRingtone()
                 #GPIO.output(23,1)
                 logger.logEvent('Event: HWListener.checkBell detects button pushed ' )
 
@@ -164,6 +164,7 @@ class AudioPlayer(threading.Thread):
         self.loadContentSounds()
         self.sound = None
         self.loadDTMFSounds()
+        self.loadRingtoneSound()
         self.postRollFlag = False
         self.playbackErorDetectionTimer = 0
         logger.logEvent("Event: AudioPlayer thread initialized")
@@ -215,7 +216,7 @@ class AudioPlayer(threading.Thread):
     def loadRingtoneSound(self):
         try:
             self.ringtoneSound = pygame.mixer.Sound(RINGTONE_PATH)
-            self.ringtoneSound = sound.set_volume(1.0) 
+            self.ringtoneSound.set_volume(1.0) 
             logger.logEvent('Event: AudioPlayer.loadRingtoneSound succeeded for %s' % (RINGTONE_PATH))
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.loadRingtoneSound: %s'  % (repr(e)))
@@ -262,8 +263,11 @@ class AudioPlayer(threading.Thread):
 
     def playRingtone(self):
         try:
+            print "1 ##################################"
             channel = self.ringtoneSound.play(0)
+            print "2 ##################################"
             channel.set_volume(0.0,1.0) 
+            print "3 ##################################"
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.playRingtone: %s'  % (repr(e)))
 
@@ -327,7 +331,7 @@ class NetSync(threading.Thread):
         try:
             return time.strftime("%M") in mins_t
         except Exception as e:
-            logger.logEvent('Exception: NetSync.minuteEquals: %s'  % (repr(e)))
+            logger.logEvent('Exception: NetSync.minuteEquals: %s' % (repr(e)))
     def hourEquals(self,hours_t): # for readability during dev
         try:
             return time.strftime("%H") in hours_t
@@ -419,101 +423,22 @@ class NetSync(threading.Thread):
                 )
             # get local file names
             localFileNames_l = self.getLocalFileNames()
-            #localFileCount = len(localFileNames_l)
-            print 1
             for remoteFileData in remoteFileData_l:
                 if remoteFileData["remoteFileNamePlusOrdinal_str"] not in localFileNames_l: # if remote file does not match local file
                     remoteFileData["download"] = True
                     # download / verify loop
-                    print 2
                     for tries in range(3):
                         self.downloadRemoteFile(remoteFileData["remoteFilePath_str"], "%s%s%s" % (BASE_PATH, AUDIO_TEMP_DIRECTORY, remoteFileData["remoteFileNamePlusOrdinal_str"] ))                    
-                        print 3
                         if self.verifyFile(remoteFileData):
-                            print 4
                             logger.logEvent('Event: NetSync.syncFiles verify %s succeeded for file %s' % (str(tries),remoteFileData["remoteFilePath_str"]))
                             self.moveVerifiedFile(remoteFileData,localFileNames_l)
                             break
                         else:
-                            print 5
                             logger.logEvent('Event: NetSync.syncFiles verify %s failed for file %' % (str(tries),remoteFileData["remoteFilePath_str"])) 
 
             audioPlayer.getFileNames()
             audioPlayer.loadContentSounds()
-            # copy file to new location
-            return
-            """
-            logger.logEvent('Event: NetSync.syncFiles started')
-            remotePaths_json = self.getRemoteFileNames()# fetch json list of remote file names from server
-            if remotePaths_json: # if remote file names list received from server
-                # parse json and count remote and local files
-                remotePaths_l =  json.loads(remotePaths_json) # 
-                remoteFileNames_l = [  path_str.rsplit("/")[-1] for  path_str in remotePaths_l  ]
-                remoteFileCount = len(remoteFileNames_l)
-                localFileNames_l = self.getLocalFileNames()
-                localFileCount = len(localFileNames_l)
-                # identify and remove obsolete local files
-                for lfi in range(len(localFileNames_l)):
-                    found = False
-                    for rfi in range(remoteFileCount):
-                        remoteFileName_str = remoteFileNames_l[rfi] # just to make this more readable
-                        remoteFileNamePlusOrdinal_str = "%s_%s" % (str(rfi).zfill(2),remoteFileName_str)
-                        if remoteFileNamePlusOrdinal_str == localFileNames_l[lfi]:
-                            found = True
-                            break
-                    if not found:
-                        if localFileNames_l[lfi] != "":
-                            fullLocalPath = "%s%s%s" % (BASE_PATH, AUDIO_DIRECTORY, localFileNames_l[lfi])
-                            self. deleteLocalFile(fullLocalPath) 
-                # identify, download, and rename remote files not found locally
-                localFileNames_l = self.getLocalFileNames() #update local filenames,
-                for rfi in range(remoteFileCount):
-                    remoteFileName_str = remoteFileNames_l[rfi] # just to make this more readable
-                    remoteFileNamePlusOrdinal_str = "%s_%s" % (str(rfi).zfill(2),remoteFileName_str)
-                    if remoteFileNamePlusOrdinal_str not in localFileNames_l: 
-                        success = self.downloadRemoteFile(remotePaths_l[rfi], "%s%s%s" % (BASE_PATH,AUDIO_DIRECTORY , remoteFileNamePlusOrdinal_str ))
-            #localFileNames_l = self.getLocalFileNames()
-            audioPlayer.getFileNames()
-            audioPlayer.loadContentSounds()
-            logger.logEvent('Event: NetSync.syncFiles complete')
 
-
-
-
-            logger.logEvent('Event: NetSync.syncFiles started')
-            remotePaths_json = self.getRemoteFileNames()# fetch json list of remote file names from server
-            if remotePaths_json: # if remote file names list received from server
-                # parse json and count remote and local files
-                remotePaths_l =  json.loads(remotePaths_json) # 
-                remoteFileNames_l = [  path_str.rsplit("/")[-1] for  path_str in remotePaths_l  ]
-                remoteFileCount = len(remoteFileNames_l)
-                localFileNames_l = self.getLocalFileNames()
-                localFileCount = len(localFileNames_l)
-                # identify and remove obsolete local files
-                for lfi in range(len(localFileNames_l)):
-                    found = False
-                    for rfi in range(remoteFileCount):
-                        remoteFileName_str = remoteFileNames_l[rfi] # just to make this more readable
-                        remoteFileNamePlusOrdinal_str = "%s_%s" % (str(rfi).zfill(2),remoteFileName_str)
-                        if remoteFileNamePlusOrdinal_str == localFileNames_l[lfi]:
-                            found = True
-                            break
-                    if not found:
-                        if localFileNames_l[lfi] != "":
-                            fullLocalPath = "%s%s%s" % (BASE_PATH, AUDIO_DIRECTORY, localFileNames_l[lfi])
-                            self. deleteLocalFile(fullLocalPath) 
-                # identify, download, and rename remote files not found locally
-                localFileNames_l = self.getLocalFileNames() #update local filenames,
-                for rfi in range(remoteFileCount):
-                    remoteFileName_str = remoteFileNames_l[rfi] # just to make this more readable
-                    remoteFileNamePlusOrdinal_str = "%s_%s" % (str(rfi).zfill(2),remoteFileName_str)
-                    if remoteFileNamePlusOrdinal_str not in localFileNames_l: 
-                        success = self.downloadRemoteFile(remotePaths_l[rfi], "%s%s%s" % (BASE_PATH,AUDIO_DIRECTORY , remoteFileNamePlusOrdinal_str ))
-            #localFileNames_l = self.getLocalFileNames()
-            audioPlayer.getFileNames()
-            audioPlayer.loadContentSounds()
-            logger.logEvent('Event: NetSync.syncFiles complete')
-            """
         except Exception as e:
             logger.logEvent('Exception in NetSync.syncFiles: %s'  % (repr(e)))
 
@@ -569,7 +494,6 @@ class Logger():
         except Exception as e:
             self.logEvent('Exception in Logger.postToServer: %s'  % (repr(e)))
 
-
 def main():
     global hwListener, audioPlayer,netSync, logger
     logger = Logger()
@@ -580,5 +504,6 @@ def main():
     audioPlayer.start()
     time.sleep(1) # slight delay to be certain audioPlayer.getFileNames
     netSync.start()
+    audioPlayer.playRingtone()
     
 main()
