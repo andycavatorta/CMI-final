@@ -16,6 +16,7 @@ import urllib2
 
 PI_NATIVE = os.uname()[4].startswith("arm") # TRUE if running on RPi
 AUDIO_DIRECTORY = "audiofiles/"
+AUDIO_TEMP_DIRECTORY = "audiofiles_temp/"
 DTMF_DIRECTORY = "dtmf/"
 RINGTONE_PATH = "ringtone/ringtone.ogg"
 LOG_PATH = "logs/temp.log"
@@ -38,11 +39,6 @@ try:
 except Exception as e:
     print "exception in ip_email.py", e
 
-
-CONFIG = {
-    "venueID" : 1,
-    "phoneID" : 1,
-}
 
 if PI_NATIVE:
     import RPi.GPIO as GPIO
@@ -386,24 +382,67 @@ class NetSync(threading.Thread):
             for chunk in iter(lambda: f.read(4096), b""):
                 hash.update(chunk)
         return hash.hexdigest()
+    def addOrdinalToFileName(self, ordinal, filename):
+        return "%s_%s" % (str(ordinal).zfill(2),filename)
+    def verifyFile(self,remoteFileData):
+        # calculate MD5 checksums for downloaded files
+        remoteFileData["MD5"] = self.md5(remoteFileData["localFilePath_str"])
+        # download MD5 checksums for changed files
+        return True
+    def moveVerifiedFile(self, remoteFileData, localFileNames_l):
+        # search local files for ordinal
+        
+        for localFileName in localFileNames_l:
+            # delete previous local file with same ordinal
+            if localFileName[0:2] == str(remoteFileData["ordinal"]).zfill(2):
+                self. deleteLocalFile("%s%s%s" % (BASE_PATH, AUDIO_DIRECTORY, localFileName))
+        os.rename(remoteFileData["localFilePath_str"], "%s%s%s" % (BASE_PATH, AUDIO_DIRECTORY, remoteFileData["remoteFileNamePlusOrdinal_str"]))
     def syncFiles(self):
         try:
             # retrieve list of names of remote files from server
+            remotePaths_json = self.getRemoteFileNames()# fetch json list of remote file names from server
+            remotePaths_l =  json.loads(remotePaths_json) # 
+            remoteFileNames_l = [  path_str.rsplit("/")[-1] for  path_str in remotePaths_l  ]
+            remoteFileData_l = []
+            for rfni in range(len(remoteFileNames_l)):
+                remoteFileData_l.append(
+                    {
+                        "ordinal" : rfni,
+                        "remoteFileName_str" : remoteFileNames_l[rfni],
+                        "remoteFilePath_str" : remotePaths_l[rfni],
+                        "remoteFileNamePlusOrdinal_str" : self.addOrdinalToFileName(rfni, remoteFileNames_l[rfni]),
+                        "localFilePath_str" : "%s%s%s_%s" % (BASE_PATH, AUDIO_TEMP_DIRECTORY, str(rfni).zfill(2),remoteFileNames_l[rfni]),
+                        "MD5" : "",
+                        "download": False,
+                        "verified": False
+                    }
+                )
+            # get local file names
+            localFileNames_l = self.getLocalFileNames()
+            #localFileCount = len(localFileNames_l)
+            print 1
+            for remoteFileData in remoteFileData_l:
+                if remoteFileData["remoteFileNamePlusOrdinal_str"] not in localFileNames_l: # if remote file does not match local file
+                    remoteFileData["download"] = True
+                    # download / verify loop
+                    print 2
+                    for tries in range(3):
+                        self.downloadRemoteFile(remoteFileData["remoteFilePath_str"], "%s%s%s" % (BASE_PATH, AUDIO_TEMP_DIRECTORY, remoteFileData["remoteFileNamePlusOrdinal_str"] ))                    
+                        print 3
+                        if self.verifyFile(remoteFileData):
+                            print 4
+                            logger.logEvent('Event: NetSync.syncFiles verify %s succeeded for file %s' % (str(tries),remoteFileData["remoteFilePath_str"]))
+                            self.moveVerifiedFile(remoteFileData,localFileNames_l)
+                            break
+                        else:
+                            print 5
+                            logger.logEvent('Event: NetSync.syncFiles verify %s failed for file %' % (str(tries),remoteFileData["remoteFilePath_str"])) 
 
-            # identify changed file names
-
-            # download changed files to temp directory
-
-            # download MD5 checksums for changed files
-
-            # verify downloads
-                # check file sizes
-                # check MD5 sums
-                # if bad, retry file + MD5 download 3 times
-                # if good, 
-
+            audioPlayer.getFileNames()
+            audioPlayer.loadContentSounds()
             # copy file to new location
-
+            return
+            """
             logger.logEvent('Event: NetSync.syncFiles started')
             remotePaths_json = self.getRemoteFileNames()# fetch json list of remote file names from server
             if remotePaths_json: # if remote file names list received from server
@@ -474,6 +513,7 @@ class NetSync(threading.Thread):
             audioPlayer.getFileNames()
             audioPlayer.loadContentSounds()
             logger.logEvent('Event: NetSync.syncFiles complete')
+            """
         except Exception as e:
             logger.logEvent('Exception in NetSync.syncFiles: %s'  % (repr(e)))
 
