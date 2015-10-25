@@ -381,18 +381,33 @@ class NetSync(threading.Thread):
         except Exception as e:
             logger.logEvent('Exception: NetSync.deleteLocalFile: %s'  % (repr(e)))
     def md5(self,fname):
-        hash = hashlib.md5()
-        with open(fname, "rb") as f:
-            for chunk in iter(lambda: f.read(4096), b""):
-                hash.update(chunk)
-        return hash.hexdigest()
+        try:
+            hash = hashlib.md5()
+            with open(fname, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    hash.update(chunk)
+            return hash.digest()
+        except Exception as e:
+            logger.logEvent('Exception: NetSync.md5: %s'  % (repr(e)))
+            return False
     def addOrdinalToFileName(self, ordinal, filename):
         return "%s_%s" % (str(ordinal).zfill(2),filename)
     def verifyFile(self,remoteFileData):
-        # calculate MD5 checksums for downloaded files
-        remoteFileData["MD5"] = self.md5(remoteFileData["localFilePath_str"])
-        # download MD5 checksums for changed files
-        return True
+        try:
+            # calculate MD5 checksums for downloaded files
+            remoteFileData["local_MD5"] = self.md5(remoteFileData["localFilePath_str"])
+            remoteMD5Path = "%s%s" % (remoteFileData["remoteFilePath_str"][:-3],"md5")
+            response = urllib2.urlopen(remoteMD5Path)
+            remoteFileData["remote_MD5"] =  response.read()
+            # print remoteFileData["local_MD5"], remoteFileData["remote_MD5"], remoteFileData["local_MD5"] == remoteFileData["remote_MD5"]
+            # print remoteFileData["MD5"]
+            # download MD5 checksums for changed files
+            return remoteFileData["local_MD5"] == remoteFileData["remote_MD5"]
+        except Exception as e:
+            logger.logEvent('Exception: NetSync.verifyFile: %s'  % (repr(e)))
+            return False
+
+        
     def moveVerifiedFile(self, remoteFileData, localFileNames_l):
         # search local files for ordinal
         
@@ -416,7 +431,8 @@ class NetSync(threading.Thread):
                         "remoteFilePath_str" : remotePaths_l[rfni],
                         "remoteFileNamePlusOrdinal_str" : self.addOrdinalToFileName(rfni, remoteFileNames_l[rfni]),
                         "localFilePath_str" : "%s%s%s_%s" % (BASE_PATH, AUDIO_TEMP_DIRECTORY, str(rfni).zfill(2),remoteFileNames_l[rfni]),
-                        "MD5" : "",
+                        "local_MD5" : "",
+                        "remote_MD5" : "",
                         "download": False,
                         "verified": False
                     }
@@ -504,6 +520,4 @@ def main():
     audioPlayer.start()
     time.sleep(1) # slight delay to be certain audioPlayer.getFileNames
     netSync.start()
-    #audioPlayer.playRingtone()
-    #netSync.start()
 main()
