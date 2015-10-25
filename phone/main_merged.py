@@ -108,6 +108,7 @@ class HWListener(threading.Thread):
                 self.hangUpState = False
                 #self.debounceTimeStamp = time.time()
                 #audioPlayer.stopAudioFile()
+                audioPlayer.playContent(12)
                 logger.logEvent('Event: HWListener.checkHang detects  receiver lifted ')
 
         except Exception as e:
@@ -172,9 +173,9 @@ class AudioPlayer(threading.Thread):
         while True:
             if pygame.mixer.get_busy() == 0:
                 if self.postRollFlag:
-                    playbackLength_f = time.time() - self.playbackErorDetectionTimer
-                    if playbackLength_f > 5:
-                        logger.logEvent('Exception: AudioPlayer.run: file not playing, possibly incomplete or damaged')
+                    #playbackLength_f = time.time() - self.playbackErorDetectionTimer
+                    #if playbackLength_f > 5:
+                    #    logger.logEvent('Exception: AudioPlayer.run: file not playing, possibly incomplete or damaged')
                     self.playContent(12)
                     #audioPlayer.playAudioFile(self.audioFileNames_l[11])
                     self.postRollFlag = False
@@ -521,3 +522,5 @@ def main():
     time.sleep(1) # slight delay to be certain audioPlayer.getFileNames
     netSync.start()
 main()
+
+
