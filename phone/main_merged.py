@@ -125,7 +125,7 @@ class HWListener(threading.Thread):
                         GPIO.output(self.col[j],0)
                         for i in range(4):
                             #hang = GPIO.input(24)
-                            i#f (hang==1): # phang=1
+                            #if (hang==1): # phang=1
                             #    audioPlayer.stopAudioFile()
                             if ((GPIO.input(self.row[i])==0)):
                                 buttonNumber = self.matrix[i][j]
@@ -239,9 +239,6 @@ class AudioPlayer(threading.Thread):
     def playContent(self, ordinal):
         try:
             filePath = "%s%s%s" % (BASE_PATH, AUDIO_DIRECTORY, self.audioFileNames_l[ordinal])
-            #sound = pygame.mixer.Sound(filePath)
-            #sound.set_volume(1.0) 
-            #sound.play(0)
             channel = self.contentSounds_l[ordinal].play(0)
             channel.set_volume(1.0,0.0) 
             logger.logEvent('Event: AudioPlayer.playContent playing %s' % (filePath))
