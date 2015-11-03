@@ -13,6 +13,8 @@ import time
 import threading
 import urllib
 import urllib2 
+import zmq
+
 
 PI_NATIVE = os.uname()[4].startswith("arm") # TRUE if running on RPi
 AUDIO_DIRECTORY = "audiofiles/"
@@ -508,16 +510,60 @@ class Logger():
         except Exception as e:
             self.logEvent('Exception in Logger.postToServer: %s'  % (repr(e)))
 
+
+
+
+# to do: does AudioPlayer need to run in its own thread?  PyGame's threading will probably handle everything
+class CommandListener(threading.Thread):
+    def __init__(self):
+        logger.logEvent("Event: CommandListener thread starting")
+        threading.Thread.__init__(self)
+        port = CONFIG["IPC_port"] 
+        context = zmq.Context()
+        self.socket = context.socket(zmq.PAIR)
+        self.socket.bind("tcp://*:%s" % str(port))
+    def dispatch(self, msg_l):
+        #try:
+            # defining this here so we can make references to instances of classes
+            cmdMap = {
+                "AudioPlayer.playContent":audioPlayer.playContent,
+                "AudioPlayer.playDTMF":audioPlayer.playDTMF,
+                "AudioPlayer.playRingtone":audioPlayer.playRingtone,
+                "AudioPlayer.playSequence":audioPlayer.playSequence,
+                "NetSync.syncFiles":netSync.syncFiles,
+                "Logger.postToServer":logger.postToServer
+            }
+            if msg_l[0] in ["AudioPlayer.playContent", "AudioPlayer.playDTMF", "AudioPlayer.playSequence"]:
+                cmdMap[msg_l[0]](int(msg_l[1]))
+            else:
+                cmdMap[msg_l[0]]()
+        #except Exception as e:
+        #    logger.logEvent('Exception in CommandListener.dispatch: %s'  % (repr(e)))
+    def run(self): 
+        while True:
+            #try:
+                msg_json = self.socket.recv()
+                print msg_json
+                #self.socket.send(msg_json)
+                msg_l = json.loads(msg_json)
+                self.dispatch(msg_l)
+                #time.sleep(1)
+            #except Exception as e:
+            #    logger.logEvent('Exception in CommandListener.run: %s'  % (repr(e)))
+
+
 def main():
     global hwListener, audioPlayer,netSync, logger
     logger = Logger()
     hwListener = HWListener()
     audioPlayer = AudioPlayer()
     netSync = NetSync()
+    commandListener = CommandListener()
     hwListener.start()
     audioPlayer.start()
     time.sleep(1) # slight delay to be certain audioPlayer.getFileNames
     netSync.start()
+    commandListener.start()
 main()
 
 
