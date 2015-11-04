@@ -28,15 +28,15 @@ BASE_URL = "https://callmeishmael-api.herokuapp.com"
 with open(BASE_PATH + 'settings.json', 'r') as f:
     CONFIG = json.load(f)
 
-print CONFIG
-
 try:
+    msg = "venueID: %s, phoneID: %s" % (str(CONFIG["venueID"]), str(CONFIG["venueID"]))
     ip_email.main(
         CONFIG["to_field"], 
         CONFIG["from_field"], 
         CONFIG["password_field"], 
         CONFIG["SMTP_field"], 
-        CONFIG["SMTP_port"]
+        CONFIG["SMTP_port"], 
+        msg
     )
 except Exception as e:
     print "exception in ip_email.py", e
@@ -101,17 +101,19 @@ class HWListener(threading.Thread):
             self.hangPin = GPIO.input(24)
 
             if self.hangUpState == False and self.hangPin == 1:  # if cradle  
+                logger.logEvent('Event: HWListener.checkHang detects receiver hung up ')
                 self.hangUpState = True
                 self.debounceTimeStamp = time.time()
                 audioPlayer.stopAudioFile()
-                logger.logEvent('Event: HWListener.checkHang detects receiver hung up ')
+                audioPlayer.stopRingtone()
 
             if self.hangUpState == True and self.hangPin == 0:  # if cradle was just lifted
+                logger.logEvent('Event: HWListener.checkHang detects  receiver lifted ')
                 self.hangUpState = False
                 #self.debounceTimeStamp = time.time()
                 #audioPlayer.stopAudioFile()
+                audioPlayer.stopRingtone()
                 audioPlayer.playContent(12)
-                logger.logEvent('Event: HWListener.checkHang detects  receiver lifted ')
 
         except Exception as e:
             logger.logEvent('Exception: HWListener.checkHang: %s'  % (repr(e)))
@@ -263,11 +265,8 @@ class AudioPlayer(threading.Thread):
 
     def playRingtone(self):
         try:
-            print "1 ##################################"
             channel = self.ringtoneSound.play(0)
-            print "2 ##################################"
             channel.set_volume(0.0,1.0) 
-            print "3 ##################################"
         except Exception as e:
             logger.logEvent('Exception: AudioPlayer.playRingtone: %s'  % (repr(e)))
 
@@ -523,7 +522,7 @@ class CommandListener(threading.Thread):
         self.socket = context.socket(zmq.PAIR)
         self.socket.bind("tcp://*:%s" % str(port))
     def dispatch(self, msg_l):
-        #try:
+        try:
             # defining this here so we can make references to instances of classes
             cmdMap = {
                 "AudioPlayer.playContent":audioPlayer.playContent,
@@ -537,8 +536,8 @@ class CommandListener(threading.Thread):
                 cmdMap[msg_l[0]](int(msg_l[1]))
             else:
                 cmdMap[msg_l[0]]()
-        #except Exception as e:
-        #    logger.logEvent('Exception in CommandListener.dispatch: %s'  % (repr(e)))
+        except Exception as e:
+            logger.logEvent('Exception in CommandListener.dispatch: %s'  % (repr(e)))
     def run(self): 
         while True:
             #try:
