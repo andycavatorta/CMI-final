@@ -32,7 +32,7 @@ def main(to_field, from_field, password_field, SMTP_field, SMTP_port, msg):
 	msg = MIMEText(my_ip)
 	msg['Subject'] = '%s on %s' % (msg, today.strftime('%b %d %Y'))
 	msg['From'] = gmail_user
-	msg['To'] = to
+	msg['To'] = str(to)
 	time.sleep(5)
 	smtpserver.sendmail(gmail_user, to, msg.as_string())
 	smtpserver.quit()
