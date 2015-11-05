@@ -29,7 +29,7 @@ with open(BASE_PATH + 'settings.json', 'r') as f:
     CONFIG = json.load(f)
 
 try:
-    msg = "venueID: %s, phoneID: %s" % (str(CONFIG["venueID"]), str(CONFIG["venueID"]))
+    msg = "Call Me Ishmael - venueID: %s, phoneID: %s" % (str(CONFIG["venueID"]), str(CONFIG["venueID"]))
     ip_email.main(
         CONFIG["to_field"], 
         CONFIG["from_field"], 

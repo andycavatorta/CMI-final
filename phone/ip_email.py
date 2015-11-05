@@ -9,7 +9,7 @@ from email.mime.text import MIMEText
 import datetime
 import urllib2
 
-def main(to_field, from_field, password_field, SMTP_field, SMTP_port, msg):
+def main(to_field, from_field, password_field, SMTP_field, SMTP_port, phoneIDs):
 	# Change to your own account information
 	to = to_field
 	gmail_user = from_field
@@ -30,7 +30,7 @@ def main(to_field, from_field, password_field, SMTP_field, SMTP_port, msg):
 	extipaddr = urllib2.urlopen("http://icanhazip.com").read()
 	my_ip = 'Local address: %s\nExternal address: %s' %  (ipaddr, extipaddr)
 	msg = MIMEText(my_ip)
-	msg['Subject'] = '%s on %s' % (msg, today.strftime('%b %d %Y'))
+	msg['Subject'] = '%s on %s' % (phoneIDs, today.strftime('%b %d %Y'))
 	msg['From'] = gmail_user
 	msg['To'] = str(to)
 	time.sleep(5)
