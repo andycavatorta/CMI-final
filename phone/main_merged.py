@@ -8,6 +8,7 @@ import json
 import logging
 import os
 import pygame
+import subprocess
 import sys
 import time
 import threading
@@ -509,8 +510,15 @@ class Logger():
         except Exception as e:
             self.logEvent('Exception in Logger.postToServer: %s'  % (repr(e)))
 
-
-
+class ReverseTunnel(threading.Thread):
+    def __init__(self):
+        logger.logEvent("Event: ReverseTunnel thread starting")
+        threading.Thread.__init__(self)
+    def run(self):
+        while True:
+            subprocess.call(["sudo", "-u", "pi", "ssh", "-N", "-R 2224:localhost:22", "ubuntu@54.69.177.30"])
+            logger.logEvent("Event: ReverseTunnel ssh tunnel closed.  Retrying in 300 seconds")
+            time.sleep(300)
 
 # to do: does AudioPlayer need to run in its own thread?  PyGame's threading will probably handle everything
 class CommandListener(threading.Thread):
@@ -558,11 +566,13 @@ def main():
     audioPlayer = AudioPlayer()
     netSync = NetSync()
     commandListener = CommandListener()
+    reverseTunnel = ReverseTunnel()
     hwListener.start()
     audioPlayer.start()
     time.sleep(1) # slight delay to be certain audioPlayer.getFileNames
     netSync.start()
     commandListener.start()
+    reverseTunnel.start()
 main()
 
 
