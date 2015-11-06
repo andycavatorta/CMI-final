@@ -517,8 +517,8 @@ class ReverseTunnel(threading.Thread):
     def run(self):
         while True:
             try:
-                #subprocess.call(["sudo", "-u", "pi", "ssh", "-o", "TCPKeepAlive=yes", "-N", "-R 2224:localhost:22", "ubuntu@54.69.177.30"])
-                subprocess.call(["sudo", "-u", "pi", "ssh", "-N", "-R 2224:localhost:22", "ubuntu@54.69.177.30"])
+                subprocess.call(["sudo", "-u", "pi", "ssh", "-o", "TCPKeepAlive=yes", "-N", "-R 2224:localhost:22", "ubuntu@54.69.177.30"])
+                #subprocess.call(["sudo", "-u", "pi", "ssh", "-N", "-R 2224:localhost:22", "ubuntu@54.69.177.30"])
             except Exception as e:
                 logger.logEvent("Event: ReverseTunnel ssh tunnel closed.  Retrying in 300 seconds")
                 time.sleep(300)
