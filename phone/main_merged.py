@@ -24,7 +24,7 @@ DTMF_DIRECTORY = "dtmf/"
 RINGTONE_PATH = "ringtone/ringtone.ogg"
 LOG_PATH = "logs/temp.log"
 BASE_PATH = "/media/usb0/CMI-final/phone/" if PI_NATIVE else "/home/stella/Dropbox/projects/current/CMI/gitrepo/CMI-final/phone/" 
-BASE_URL = "https://callmeishmael-api.herokuapp.com"
+BASE_URL = "https://api.callmeishmael.com"
 
 with open(BASE_PATH + 'settings.json', 'r') as f:
     CONFIG = json.load(f)
